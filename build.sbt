@@ -9,6 +9,8 @@ lazy val root = project
       "org.apache.spark" %% "spark-core" % "3.5.7",
       "org.apache.spark" %% "spark-sql" % "3.5.7",
       "org.apache.spark" %% "spark-sql-kafka-0-10" % "3.5.7",
+      "org.apache.spark" %% "spark-mllib" % "2.2.0",
+      "org.apache.spark" %% "spark-mllib" % "3.5.0",
       "com.typesafe" % "config" % "1.4.3",
       "com.lihaoyi" %% "requests" % "0.8.0",
       "io.circe" %% "circe-parser" % "0.14.7",

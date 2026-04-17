@@ -1,4 +1,4 @@
-//Spark reads the Kafka messages and streams a dataframe
+//User Story 4 - Spark reads the Kafka messages and streams a dataframe
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -8,6 +8,7 @@ object SparkIngestClean {
   def main(args: Array[String]): Unit = {
 
     // Load config file
+
     val config = ConfigFactory.parseFile(
       new java.io.File("src/main/resources/application.conf")
     )
@@ -17,6 +18,8 @@ object SparkIngestClean {
     val topic = config.getString("kafka.topic")
 
     //Create Spark session
+    println("Starting Spark Session...")
+
     val spark = SparkSession.builder()
       .appName("KafkaToSparkIngest")
       .master("local[*]")
@@ -25,11 +28,14 @@ object SparkIngestClean {
     spark.sparkContext.setLogLevel("WARN")
 
     //Read streaming data from Kafka
+
+    println("Reading in Stream...")
+
     val kafkaDB = spark.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", bootstrapServers)
       .option("subscribe", topic)
-      .option("startingOffsets", "earliest")
+      .option("startingOffsets", "latest")
       .load()
 
     //Kafka key/value come in as bytes, so convert them to strings
@@ -73,26 +79,27 @@ object SparkIngestClean {
         col("timestamp")
       )
 
+
+    println("Cleaning Data...")
+
     val cleanDf = trafficDf
       //Trim Spaces
-      .withColumn("point", trim(col("point"))
+    .withColumn("point", trim(col("point"))
       )
       .withColumn("frc", upper(trim(col("frc")))
       )
 
     //Address null values
-     .na.fill(Map(
-    "point" -> "UNKNOWN",
-    "frc" -> "UNKNOWN")
-    )
-    .na.fill(0.0, Seq("currentSpeed", "freeFlowSpeed", "confidence")
-    )
-    .na.fill(0, Seq("currentTravelTime", "freeFlowTravelTime")
-    )
-    .na.fill(false, Seq("roadClosure")
-    )
+   .na.fill(Map(
+  "point" -> "UNKNOWN",
+  "frc" -> "UNKNOWN"
+  ))
+.na.fill(0.0, Seq("currentSpeed", "freeFlowSpeed", "confidence"))
+.na.fill(0, Seq("currentTravelTime", "freeFlowTravelTime"))
+.na.fill(false, Seq("roadClosure"))
 
     //Filter noise/invalid records
+
     .filter(col("currentSpeed") >= 0)
     .filter(col("freeFlowSpeed") > 0)
     .filter(col("confidence").between(0.0, 1.0)
@@ -126,11 +133,13 @@ object SparkIngestClean {
 
     //Write the streaming DataFrame to the console
     val query = cleanDf.writeStream
-      .format("console")
-      .outputMode("append")
-      .option("truncate", false)
-      .start()
+  .format("console")
+  .outputMode("append")
+  .option("truncate", false)
+  .option("checkpointLocation", "checkpoints/traffic_ingest_clean") 
+  .start()
 
+    println("Processing Complete.")
     query.awaitTermination()
   }
 }
