@@ -17,14 +17,18 @@ lazy val root = project
       "io.circe" %% "circe-core" % "0.14.7",
       "io.circe" %% "circe-generic" % "0.14.7",
       "org.apache.kafka" % "kafka-clients" % "3.5.1",
+      "org.apache.spark" %% "spark-graphx" % "3.5.7",
       "org.scalameta" %% "munit" % "1.0.0" % Test
   ),
 
   Compile / run / fork := true,
   Compile / run / javaOptions ++= Seq(
       "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
-      "--add-opens=java.base/java.nio=ALL-UNNAMED",
-      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+    "--add-opens=java.base/java.nio=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.util=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED"
     )
 )
 
