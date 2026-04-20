@@ -97,7 +97,8 @@ println("Starting Session...")
         avg("congestion_ratio").alias("avg_congestion_10min"),
         max("currentSpeed").alias("max_speed_10min"),
         min("currentSpeed").alias("min_speed_10min"),
-        count("*").alias("traffic_events_10min")
+        count("*").alias("traffic_events_10min"),
+        max(col("roadClosure").cast("int")).alias("road_closure_flag")
       )
       .select(
         col("point"),
@@ -108,7 +109,8 @@ println("Starting Session...")
         col("avg_congestion_10min"),
         col("max_speed_10min"),
         col("min_speed_10min"),
-        col("traffic_events_10min")
+        col("traffic_events_10min"),
+        col("road_closure_flag")
       )
 
   //Write

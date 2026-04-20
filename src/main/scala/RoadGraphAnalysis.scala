@@ -140,7 +140,7 @@ object RoadGraphAnalysis {
     val uniqueEdgesDf = edgesDf.distinct()
 
 
-    println("Sample edges:")
+    println("Sample Graph edges:")
     uniqueEdgesDf.show(10, false)
 
     // Convert vertices DataFrame to GraphX vertex RDD
@@ -179,24 +179,32 @@ object RoadGraphAnalysis {
 
     //count how many edges are connected to each node
     //higher degree = more connected = more important road point
-    println("\nTop connected nodes:")
-    graph.degrees
-      .takeOrdered(10)(Ordering[Int].reverse.on(_._2))
-      .foreach(println)
+   println("\nTop Connected Road Points:")
+graph.degrees
+  .takeOrdered(10)(Ordering[Int].reverse.on(_._2))
+  .foreach { case (nodeId, degree) =>
+    println(s"Node $nodeId has $degree road connections")
+  }
 
-    // Bottlenecks = lowest congestion ratio
-    println("\nPotential bottleneck segments (lowest congestion ratio):")
-    graph.edges
-      .map(e => (e.attr._1, e.srcId, e.dstId, e.attr._2, e.attr._3))
-      .takeOrdered(10)(Ordering[Double].on(_._4))
-      .foreach(println)
+println("\nBottleneck Segments (Lowest Congestion Ratio):")
+graph.edges
+  .map(e => (e.attr._1, e.srcId, e.dstId, e.attr._2, e.attr._3))
+  .takeOrdered(10)(Ordering[Double].on(_._4))
+  .foreach { case (point, srcId, dstId, congestionRatio, delaySeconds) =>
+    println(
+      f"Location: $point | Segment: $srcId -> $dstId | Congestion Ratio: $congestionRatio%.3f | Delay: $delaySeconds seconds"
+    )
+  }
 
-    // Bottlenecks = highest delay- biggest travel delay times
-    println("\nPotential bottleneck segments (highest delay):")
-    graph.edges
-      .map(e => (e.attr._1, e.srcId, e.dstId, e.attr._2, e.attr._3))
-      .takeOrdered(10)(Ordering[Int].reverse.on(_._5))
-      .foreach(println)
+println("\nBottleneck Segments (Highest Delay):")
+graph.edges
+  .map(e => (e.attr._1, e.srcId, e.dstId, e.attr._2, e.attr._3))
+  .takeOrdered(10)(Ordering[Int].reverse.on(_._5))
+  .foreach { case (point, srcId, dstId, congestionRatio, delaySeconds) =>
+    println(
+      f"Location: $point | Segment: $srcId -> $dstId | Congestion Ratio: $congestionRatio%.3f | Delay: $delaySeconds seconds"
+    )
+  }
 
     spark.stop()
   }

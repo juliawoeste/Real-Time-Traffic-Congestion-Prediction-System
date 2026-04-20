@@ -33,3 +33,13 @@ metals.sbt
 
 # API keys
 src/main/resources/application.conf
+
+# Spark / Streaming outputs
+data/
+checkpoints/
+
+# ML models
+models/
+
+# Logs
+*.log

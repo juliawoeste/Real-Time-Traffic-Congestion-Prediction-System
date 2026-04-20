@@ -1,1 +1,0 @@
-{"class":"org.apache.spark.ml.feature.VectorAssembler","timestamp":1776522108546,"sparkVersion":"3.5.7","uid":"vecAssembler_b92e803a783d","paramMap":{"inputCols":["avg_speed_10min","avg_congestion_10min","max_speed_10min","min_speed_10min","traffic_events_10min"],"outputCol":"features"},"defaultParamMap":{"handleInvalid":"error","outputCol":"vecAssembler_b92e803a783d__output"}}

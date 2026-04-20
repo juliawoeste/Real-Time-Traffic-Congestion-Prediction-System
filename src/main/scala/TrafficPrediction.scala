@@ -3,6 +3,7 @@
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.functions._
 
 object TrafficPrediction {
   def main(args: Array[String]): Unit = {
@@ -29,7 +30,8 @@ object TrafficPrediction {
       StructField("avg_congestion_10min", DoubleType, true),
       StructField("max_speed_10min", DoubleType, true),
       StructField("min_speed_10min", DoubleType, true),
-      StructField("traffic_events_10min", LongType, false)
+      StructField("traffic_events_10min", LongType, false),
+      StructField("road_closure_flag", IntegerType, true)
     ))
 
     val featuresDf = spark.readStream
@@ -39,15 +41,27 @@ object TrafficPrediction {
 	
 	
     val predictions = model.transform(featuresDf)
+      .withColumnRenamed("prediction", "predicted_delay_seconds")
+      .withColumn(
+        "traffic_condition",
+        when(col("road_closure_flag") === 1, "CLOSED")
+          .when(col("avg_congestion_10min") < 0.5, "STAND_STILL")
+          .when(col("avg_congestion_10min") < 0.75, "HEAVY")
+          .when(col("avg_congestion_10min") < 0.98, "MODERATE")
+          .otherwise("FREE_FLOW")
+      )
 	
 	//Running Prediction
 	println("Predicting...")
-    val query = predictions.select(
-      "point",
-      "window_start",
-      "window_end",
-      "avg_delay_10min",
-      "prediction"
+
+ val query = predictions.select(
+      col("point").alias("location"),
+      col("window_start"),
+      col("window_end"),
+      round(col("avg_congestion_10min"), 2).alias("avg_congestion_10min"),
+      col("traffic_condition"),
+      round(col("avg_delay_10min"), 2).alias("actual_avg_delay_seconds"),
+      round(col("predicted_delay_seconds"), 2).alias("predicted_delay_seconds")
     ).writeStream
       .format("console")
       .outputMode("append")
@@ -56,7 +70,7 @@ object TrafficPrediction {
 
 	println("Completed.")
 	
-    query.awaitTermination()
+  query.awaitTermination()
 	
   }
 }
